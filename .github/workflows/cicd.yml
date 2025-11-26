@@ -27,6 +27,11 @@ jobs:
               uses: actions/setup-python@v4
               with:
                 python-version: ${{env.python_version}} ## or $python_version
+            
+            - name: install pytest
+              run: |
+                python -m pip install --upgrade pip
+                pip install pytest
 
             - name: unit testing - python code
               run: pytest
@@ -45,15 +50,15 @@ jobs:
             - name: Log in to Docker Hub
               uses: docker/login-action@v3
               with:
-                username: ${{ secrets.docker_hub_username }}
-                password: ${{ secrets.docker_hub_password }}
+                username: ${{ secrets.DOCKER_HUB_USERNAME }}
+                password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
             - name: build and push docker image (docker hub)
               uses: docker/build-push-action@v5
               with:
                 context: .
                 push: true
-                tags: ${{ secrets.docker_hub_username }}/${{env.image_name}}:${{ github.run_id }}
+                tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_id }}
             
             - name: push to AWS ECR
               run: |
