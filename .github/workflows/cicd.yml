@@ -1,0 +1,71 @@
+name: Real world Docker build and push
+
+on:
+ 
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+    aws_region: us-east-1
+    python_version: 3.11
+    image_name: portcicd # assume as image name
+    ecr_registry: public.ecr.aws/m1y0v6d8
+    ecr_repository: public.ecr.aws/m1y0v6d8/portcicd
+    #ecr_repository: ${{vars.aws_repo_public}}
+
+jobs:
+    build_and_store_image:
+        runs-on: ubuntu-latest
+        steps:
+
+            - name: checkout git repository
+              uses: actions/checkout@v4
+
+            - name: setup_python
+              uses: actions/setup-python@v4
+              with:
+                python-version: ${{env.python_version}} ## or $python_version
+
+            - name: unit testing - python code
+              run: pytest
+
+            - name: set up AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.aws_region }}
+            
+            - name: login to AWS
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Log in to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                username: ${{ secrets.docker_hub_username }}
+                password: ${{ secrets.docker_hub_password }}
+
+            - name: build and push docker image (docker hub)
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                push: true
+                tags: ${{ secrets.docker_hub_username }}/${{env.image_name}}:${{ github.run_id }}
+            
+            - name: push to AWS ECR
+              run: |
+                aws ecr-public get-login-password \
+                --region us-east-1 | docker login --username AWS \
+                --password-stdin ${{env.ecr_registry}}
+                docker tag ${{env.image_name}}:${{ github.run_id }} ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }}
+                docker push ${{env.ecr_repository}}
+
+              
+
+            # - name: build image
+            #   run: docker build -t ${{secrets.docker_hub_username}}/${{env.image_name}}:${{ github.run_id }} .
+    
+        
