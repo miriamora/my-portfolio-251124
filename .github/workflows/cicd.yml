@@ -22,6 +22,8 @@ env:
 
     hostname: ${{secrets.HOSTNAME}}  # *****please update with public ip address/hostname at secrets*****
     host_username: ubuntu
+    container_port: 80 #check Dockerfile to confirm application EXPOSE port
+    external_port: 80  #update if needed and make sure external port is open at deployment/test server
     
 
 jobs:
@@ -115,11 +117,11 @@ jobs:
                 port: 22
                 script: |
                     docker pull ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }}
-                    docker run -d --name portcicd_app -p 80:80 ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }} #**adjust and open port to meet requirement**
+                    docker run -d --name portcicd_app -p ${{env.external_port}}:${{env.container_port}} ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }} #**adjust and open port to meet requirement**
 
             - name: display app information
               run: |
-                echo "New update: Your application is ready for testing at ${{env.hostname}}"        #public_ip:external_port (default is 80)
+                echo "New update: Your application is ready for testing at ***hostname/public_ip:external_port*** "  
 
 
 
