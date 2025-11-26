@@ -1,5 +1,8 @@
 name: Real world Docker build and push
 
+##To use, confirm your deployment test server is ready and docker is installed and enabled. 
+##update secrets with ssh key and test server hostname as needed
+
 on:
  
   push:
@@ -10,14 +13,21 @@ on:
 env:
     aws_region: us-east-1
     python_version: 3.11
-    image_name: portcicd # assume as image name
+    image_name: portcicd # keep same as repository name easy management
     ecr_registry: public.ecr.aws/m1y0v6d8
     ecr_repository: public.ecr.aws/m1y0v6d8/portcicd
     #ecr_repository: ${{vars.aws_repo_public}}
 
+    dev_test_server_private_key: ${{secrets.AWSKEYPAIR_PRIVATE_KEY}} # set up dev_test_server before running deployment stage
+
+    hostname: ${{secrets.HOSTNAME}}  # *****please update with public ip address/hostname at secrets*****
+    host_username: ubuntu
+    
+
 jobs:
     build_and_store_image:
         runs-on: ubuntu-latest
+
         steps:
 
             - name: checkout git repository
@@ -35,7 +45,7 @@ jobs:
                 pip install pytest
 
             - name: unit testing - python code
-            # added test_app.py file - this should be from developer???
+            # added test_app.py file - this should be from developer in real life situation???
               run: |
                 pytest    
            
@@ -52,17 +62,23 @@ jobs:
               uses: aws-actions/amazon-ecr-login@v2
 
             - name: Log in to Docker Hub
+            #only use if pushing to DockerHub
               uses: docker/login-action@v3
               with:
                 username: ${{ secrets.DOCKER_HUB_USERNAME }}
                 password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
             - name: build and push docker image (docker hub)
+            #only use if pushing to DockerHub (see note in next step)
               uses: docker/build-push-action@v5
               with:
                 context: .
                 push: true
                 tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_id }}
+
+            ##deactivate docker login and build-push steps above, then activate this instead if only pushing to ECR
+            # - name: build image
+            #   run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_id }} .
             
             - name: push to AWS ECR
               run: |
@@ -72,9 +88,40 @@ jobs:
                 docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_id }} ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }}
                 docker push ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }}
 
-              
+    deploy_to_dev_server: 
+        runs-on: ubuntu-latest
+    
+        steps:
 
-            # - name: build image
-            #   run: docker build -t ${{secrets.docker_hub_username}}/${{env.image_name}}:${{ github.run_id }} .
+            - name: ssh to dev test server
+              uses: appleboy/ssh-action@v0.1.7
+              with:
+                host: ${{ env.hostname }}
+                username: ${{ env.host_username }}
+                key: ${{ env.dev_test_server_private_key }}
+                port: 22
+                script: |
+                    docker rm -f $(docker ps -aq) || true
+                    docker rmi -f $(docker images -aq) || true
+
+            - name: ssh to dev test server
+              if: ${{ always()}}
+              uses: appleboy/ssh-action@v0.1.7
+              with:
+                host: ${{ env.hostname }}
+                username: ${{ env.host_username }}
+                key: ${{ env.dev_test_server_private_key }}
+                port: 22
+                script: |
+                    docker run -d --name portcicd_app -p 80:80 ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }} **adjust and open port to meet requirement**
+
+            - name: display app information
+              run: |
+                echo "New update: Your application is ready for testing at ${{env.hostname}}"        #public_ip:external_port (default is 80)
+
+
+
+
+            
     
         
