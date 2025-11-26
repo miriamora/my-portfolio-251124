@@ -115,7 +115,7 @@ jobs:
                 port: 22
                 script: |
                     docker pull ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }}
-                    docker run -d --name portcicd_app -p 80:80 ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }} **adjust and open port to meet requirement**
+                    docker run -d --name portcicd_app -p 80:80 ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_id }} #**adjust and open port to meet requirement**
 
             - name: display app information
               run: |
