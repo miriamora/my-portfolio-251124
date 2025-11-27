@@ -76,7 +76,9 @@ jobs:
               with:
                 context: .
                 push: true
-                tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }}
+                tags: |
+                  ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }}
+                  ${{secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}
 
             ##deactivate docker login and build-push steps above, then activate this instead if only pushing to ECR
             # - name: build image
@@ -88,7 +90,9 @@ jobs:
                 --region us-east-1 | docker login --username AWS \
                 --password-stdin ${{env.ecr_registry}}
                 docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }} ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
+                docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }} ${{env.ecr_registry}}/${{env.image_name}}
                 docker push ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
+                docker push ${{env.ecr_registry}}/${{env.image_name}}
 
     deploy_to_dev_server: 
         runs-on: ubuntu-latest

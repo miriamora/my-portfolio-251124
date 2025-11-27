@@ -15,9 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build image
-        run: docker build -t ${{secrets.REGISTRY_USERNAME}}/portfolio .
+        run: |
+          docker build -t ${{secrets.REGISTRY_USERNAME}}/portfolio:${{github.run_number}} .
+          docker build -t ${{secrets.REGISTRY_USERNAME}}/portfolio .
 
       - name: Push image
         run: |
             docker login -u ${{secrets.REGISTRY_USERNAME}} -p ${{secrets.REGISTRY_PASSWORD}}
+            docker push ${{secrets.REGISTRY_USERNAME}}/portfolio:${{github.run_number}}
             docker push ${{secrets.REGISTRY_USERNAME}}/portfolio
