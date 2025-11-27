@@ -125,7 +125,7 @@ jobs:
 
             - name: display app information
               run: |
-                echo "New update: Your application is ready for testing at ***hostname/public_ip:external_port*** "  
+                echo "New update - Your application is ready for testing at ***hostname/public_ip:external_port*** "  
 
 
 
