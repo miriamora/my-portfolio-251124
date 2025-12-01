@@ -173,7 +173,8 @@ jobs:
         - name: Deploy to EKS
           run: |
             kubectl set image deployment/portcicd-deployment portcicd=${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
-            kubectl rollout status deployment/portcicd
+            kubectl rollout status deployment/portcicd-deployment 
+            kubectl get pods -l app=portcicd
 
 
     deploy_to_ECS:
