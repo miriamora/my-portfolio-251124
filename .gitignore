@@ -2,7 +2,8 @@ __pycache__/
 venv/
 
 #for test_server testing :)
-*.tf
+#*.tf
 *.pem
 .terraform
-docker.sh
+#docker.sh
+devinfra_bk
