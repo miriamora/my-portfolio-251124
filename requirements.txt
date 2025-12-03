@@ -1,5 +1,6 @@
 Flask==2.3.2
 reportlab==4.0.9
-Werkzeug==2.3.7
+Werkzeug==3.0.3
 click==8.1.7
 itsdangerous==2.1.2
+pytest

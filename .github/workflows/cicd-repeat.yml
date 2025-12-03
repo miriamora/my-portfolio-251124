@@ -1,0 +1,76 @@
+name: Port-CICD ECS deployment
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main"]
+
+permissions:
+  id-token: write          # Required for OIDC
+  contents: read
+
+env: 
+  Python_version: 3.11
+  IMAGE_NAME: portcicd-redo
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID}}
+  ECR_REPO: $AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME 
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+            python-version: ${{env.python_version}}
+
+      - name: Install pytest
+        run: pip install -r requirements.txt
+
+      - name: unit test
+        run: pytest test_app.py
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{secrets.IAM_ROLE_ARN_OIDC}}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: login to AWS-ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }} .
+
+      # 5. Tag Docker image for ECR
+      - name: Tag Docker image
+        run: |
+          docker tag ${{ env.IMAGE_NAME }}:latest ${{ env.ECR_REPO }}:latest
+
+      # 6. Scan Docker image with Trivy
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.ECR_REPO }}:latest
+          format: table
+          exit-code: '1' # fail workflow on critical/high vulnerabilities
+          severity: CRITICAL,HIGH
+
+      # 7. Push Docker image to ECR
+      - name: Push Docker image to Amazon ECR
+        run: |
+          docker push ${{ env.ECR_REPO }}:latest
+
+      - name: Build image
+        run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.IMAGE_NAME}} .
