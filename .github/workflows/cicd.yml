@@ -18,9 +18,9 @@ env:
     aws_region: us-east-1
     python_version: 3.11
     image_name: portcicd # keep same as repository name easy management
-    ecr_registry: public.ecr.aws/m1y0v6d8
-    ecr_repository: public.ecr.aws/m1y0v6d8/portcicd
-    #ecr_repository: ${{vars.aws_repo_public}}
+    ecr_registry: ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.us-east-1.amazonaws.com
+    ecr_repository: ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.us-east-1.amazonaws.com/portcicd
+    
 
     dev_test_key_private_key: ${{secrets.DEV_TEST_KEY_PRIVATE_KEY}} # set up dev_test_server before running deployment stage
 
@@ -97,7 +97,7 @@ jobs:
               with:
                 image-ref: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.image_name }}:${{ github.run_number }}
                 format: table
-                exit-code: 0    # 1 --> scan fails even if vulnerabilities exist; 0 --> scan passes even if vulnerabilities exists
+                exit-code: 1    # 1 --> scan fails even if vulnerabilities exist; 0 --> scan passes even if vulnerabilities exists
                 ignore-unfixed: true
 
             - name: build and push docker image (docker hub)
