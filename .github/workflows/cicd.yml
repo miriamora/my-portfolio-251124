@@ -83,19 +83,15 @@ jobs:
                 exit-code: 0    # 1 --> scan fails even if vulnerabilities exist; 0 --> scan passes even if vulnerabilities exists
                 ignore-unfixed: true
 
-            - name: build and push docker image (docker hub)
-            #only use if pushing to DockerHub (see note in next step)
-              uses: docker/build-push-action@v5
-              with:
-                context: .
-                push: true
-                tags: |
-                  ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }}
-                  ${{secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}
-
-            ##deactivate docker login and build-push steps above, then activate this instead if only pushing to ECR
-            # - name: build image
-            #   run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }} .
+            # - name: build and push docker image (docker hub)
+            # #only use if pushing to DockerHub (see note in next step)
+            #   uses: docker/build-push-action@v5
+            #   with:
+            #     context: .
+            #     push: true
+            #     tags: |
+            #       ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }}
+            #       ${{secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}
             
             - name: push to AWS ECR
               run: |
