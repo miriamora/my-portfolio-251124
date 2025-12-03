@@ -115,6 +115,10 @@ jobs:
                 role-to-assume: ${{secrets.IAM_ROLE_ARN_OIDC}}
                 aws-region: ${{ env.aws_region }}
 
+            - name: login to AWS
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
             - name: remove old images and containers
               uses: appleboy/ssh-action@v0.1.7
               with:
@@ -155,6 +159,10 @@ jobs:
           with:
             role-to-assume: ${{secrets.IAM_ROLE_ARN_OIDC}}
             aws-region: ${{ env.aws_region }}
+
+        - name: login to AWS
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v2
 
         - name: Setup Kubectl
           uses: azure/setup-kubectl@v3
