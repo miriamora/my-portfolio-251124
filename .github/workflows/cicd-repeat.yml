@@ -33,13 +33,13 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: unit test
-        run: pytest test.py
+        run: pytest test_app.py
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{secrets.IAM_ROLE_ARN_OIDC}}
           aws-region: ${{ env.AWS_REGION }}
-          
+
       - name: Build image
         run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.IMAGE_NAME}} .
