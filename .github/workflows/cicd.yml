@@ -131,7 +131,7 @@ jobs:
                     docker rmi -f $(docker images -aq) || echo ""  #same as using true above
                     
 
-            - name: run latest image # can merge with previous step
+            - name: run latest image
               if: ${{ always()}}
               uses: appleboy/ssh-action@v0.1.7
               with:
@@ -140,12 +140,13 @@ jobs:
                 key: ${{ env.dev_test_key_private_key }}
                 port: ${{env.SSH_PORT}}
                 script: |
-                    docker pull ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
-                    docker run -d --name portcicd_app -p ${{env.external_port}}:${{env.container_port}} ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }} #**adjust and open port to meet requirement**
+                  aws ecr get-login-password --region ${{ env.aws_region }} \
+                    | docker login --username AWS --password-stdin ${{ env.ecr_registry }}
 
-            - name: display app information
-              run: |
-                echo "New update - Your application is ready for testing at ***hostname/public_ip:external_port*** "  
+                  docker pull ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
+                  docker run -d --name portcicd_app -p ${{env.external_port}}:${{env.container_port}} \
+                    ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
+    
 
     deploy_to_EKS:
       needs: build_scan_and_store_image
