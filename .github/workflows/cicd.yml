@@ -20,7 +20,7 @@ env:
     image_name: portcicd # keep same as repository name easy management
     ecr_registry: ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.us-east-1.amazonaws.com
     ecr_repository: ${{secrets.AWS_ACCOUNT_ID}}.dkr.ecr.us-east-1.amazonaws.com/portcicd
-    
+
 
     dev_test_key_private_key: ${{secrets.DEV_TEST_KEY_PRIVATE_KEY}} # set up dev_test_server before running deployment stage
 
@@ -51,7 +51,7 @@ jobs:
               run: |
                 python -m pip install --upgrade pip
                 pip install -r requirements.txt
-                pip install pytest
+            #   pip install pytest
 
             - name: unit testing - python code
             # added test_app.py file - this should be from developer in real life situation???
