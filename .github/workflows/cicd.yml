@@ -95,7 +95,7 @@ jobs:
             
             - name: push to AWS ECR
               run: |
-                aws ecr-public get-login-password \
+                aws ecr get-login-password \
                 --region us-east-1 | docker login --username AWS \
                 --password-stdin ${{env.ecr_registry}}
                 docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/${{env.image_name}}:${{ github.run_number }} ${{env.ecr_registry}}/${{env.image_name}}:${{ github.run_number }}
